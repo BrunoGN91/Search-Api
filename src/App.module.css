@@ -96,6 +96,7 @@
   overflow: hidden;
   white-space: pre-wrap;
   text-overflow: ellipsis;
+  margin-bottom: 10px;
   
  
 }
@@ -109,6 +110,7 @@
 
 .itemContainer:hover {
   background-color: #61dafb;
+  opacity: 0.8;
 }
 
 .App {

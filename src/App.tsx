@@ -39,8 +39,63 @@ const initialStories = [
 // const getAsyncStories = () =>
 // new Promise((resolve, reject) => setTimeout(reject, 1000)
 // );
-console.log("A");
-const useSemiPersistentState = (key, initialState) => {
+
+// TYPES
+
+
+type Story = {
+  objectId: string;
+  url: string;
+  title: string;
+  author: string;
+  num_comments: number;
+  points: number;
+}
+
+type Stories = Array<Story>
+
+
+type StoriesState = {
+  data: Stories;
+  isLoading: boolean;
+  isError: boolean
+}
+
+type StoriesAction = 
+| StoriesFetchInitAction
+| StoriesFetchSuccessAction
+| StoriesFetchFailureAction
+| StoriesRemoveAction
+
+
+interface StoriesFetchInitAction {
+  type: 'STORIES_FETCH_INIT'
+}
+
+interface StoriesFetchSuccessAction {
+  type: 'STORIES_FETCH_SUCCESS';
+  payload: Stories
+}
+
+interface StoriesFetchFailureAction {
+  type: 'STORIES_FETCH_FAILURE'
+}
+
+interface StoriesRemoveAction {
+  type: 'REMOVE_STORY';
+  payload: Story;
+}
+
+type SearchFormProps = {
+  searchTerm: string;
+  onSearchInput: (event: React.ChangeEvent<HTMLInputElement>) => void
+  onSearchSubmit: (event: React.FormEvent<HTMLFormElement>) => void
+}
+//
+
+const useSemiPersistentState = (
+  key: string, 
+  initialState: string): [string, (newValue: string) => void] => {
   const isMounted = React.useRef(false)
   const [value, setValue] = React.useState(
     localStorage.getItem(key) || initialState
@@ -50,14 +105,19 @@ const useSemiPersistentState = (key, initialState) => {
     if(!isMounted.current) {
       isMounted.current = true
     } else {
-    console.log('A');
+    
     localStorage.setItem(key, value);
   }}, [value, key]);
 
   return [value, setValue];
 };
 
-const storiesReducer = (state, action) => {
+
+
+const storiesReducer = (
+  state: StoriesState,
+  action: StoriesAction
+) => {
   switch (action.type) {
     case 'STORIES_FETCH_INIT':
       return {
@@ -82,7 +142,7 @@ const storiesReducer = (state, action) => {
       return {
         ...state,
         data: state.data.filter(
-        (story) => action.payload.objectID !== story.objectID
+        (story) => action.payload.objectId !== story.objectId
       ),
     }
     default:
@@ -90,7 +150,18 @@ const storiesReducer = (state, action) => {
   }
 };
 
+// const getSumComments = (stories) => {
+//   console.log("C");
+
+//   return stories.data.reduce(
+//     (result, value) => result + value.num_comments,
+//     0
+//   )
+// }
+
+
 const App = () => {
+  console.log("A: App");
   const [searchTerm, setSearchTerm] = useSemiPersistentState(
     'search',
     'react'
@@ -105,16 +176,18 @@ const App = () => {
     `${API_ENDPOINT}${searchTerm}`
   );
   
-  const handleSearchInput = (event) => {
+  const handleSearchInput = (event: React.ChangeEvent<HTMLInputElement>) => {
     setSearchTerm(event.target.value)
   }
   
-  const handleSearchSubmit = (event) => {
+  const handleSearchSubmit = (event: React.FormEvent<HTMLFormElement>) => {
     setUrl(`${API_ENDPOINT}${searchTerm}`)
     event.preventDefault()
   }
 
-    
+    // Get Sum Comments
+// const sumComments = React.useMemo(() => getSumComments(stories), [stories])
+
   // Countdown
 
   const [count, setCount] = React.useState(0);
@@ -148,9 +221,8 @@ const App = () => {
   }, [handleFetchStories]
   )
 
-  
 
-  const handleRemoveStory = (item) => {
+  const handleRemoveStory = (item: Story) => {
     dispatchStories({
       type: 'REMOVE_STORY',
       payload: item,
@@ -160,6 +232,8 @@ const App = () => {
   // const searchedStories = stories.data.filter((story) =>
   //   story.title.toLowerCase().includes(searchTerm.toLowerCase())
   // );
+
+
 
   return (
     <div>
@@ -200,3 +274,5 @@ const App = () => {
 
 
 export default App;
+
+export { storiesReducer }

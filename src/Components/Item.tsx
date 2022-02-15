@@ -2,7 +2,21 @@ import React from 'react';
 import styles from '../App.module.css'
 import { ReactComponent as Check } from '../check.svg'
 
-const Item = ({item, onRemoveItem}) => {
+type Story = {
+  objectId: string;
+  url: string;
+  title: string;
+  author: string;
+  num_comments: number;
+  points: number;
+}
+
+type ItemProps = {
+  item: Story;
+  onRemoveItem: (item: Story) => void;
+}
+
+const Item = ({item, onRemoveItem}: ItemProps) => {
     return(
      
       <li className={styles.itemContainer} key={item.objectId}>
