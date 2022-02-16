@@ -164,7 +164,7 @@ const App = () => {
   console.log("A: App");
   const [searchTerm, setSearchTerm] = useSemiPersistentState(
     'search',
-    'react'
+    'React'
   );
 
   const [stories, dispatchStories] = React.useReducer(

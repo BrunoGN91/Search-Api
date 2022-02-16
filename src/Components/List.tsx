@@ -1,7 +1,8 @@
 import React from 'react';
 import Item from './Item'
 import styles from "../App.module.css"
-
+import Button from './Button'
+import { sortBy } from 'lodash'
 
 type Story = {
   objectId: string;
@@ -18,20 +19,60 @@ type Listprops = {
   list: Stories;
   onRemoveItem: (item: Story) => void;
 }
+interface fn {
+  (param: string): void;
+}
+const SORTS = {
+  NONE: (list: string) => list,
+  TITLE: (list: string) => sortBy(list, 'title'),
+  AUTHOR: (list: string) => sortBy(list, 'author').reverse(),
+  COMMENTS: (list: string) => sortBy(list, 'num_comments').reverse(),
+  POINTS: (list: string) => sortBy(list, 'points').reverse()
 
-const List = React.memo(({ list, onRemoveItem }: Listprops) => 
+}
 
-  ( 
-  <ul className={styles.listContainer}>
-   
-    {list.map((item )=> (
+const List = React.memo(({ list, onRemoveItem }: Listprops) => {
+
+const [sort, setSort] = React.useState({sortKey:'NONE', isReverse: false})
+
+const handleSort = (sortKey: string) => {
+  const isReverse: any = sort.sortKey === sortKey && !sort.isReverse
+  setSort({sortKey, isReverse})
+}
+
+const sortFunction = (SORTS as any)[sort.sortKey]
+const sortedList: any = sort.isReverse ? sortFunction(list).reverse() : sortFunction(list)
+
+  return ( 
+  <ul>
+    <strong>Sort By</strong>
+  <li style={{display: 'flex', margin: "10px"}}>
+     <span style={{ margin: "0 10px"}}>
+       <Button type="button" onClick={() => handleSort("TITLE")}>Title</Button>
+       </span>
+     <span style={{ margin: "0 10px"}}>
+     <Button type="button" onClick={() => handleSort("AUTHOR")}>Author</Button>
+       </span>
+     <span style={{ margin: "0 10px"}}>
+     <Button type="button" onClick={() => handleSort("COMMENTS")}>Comments</Button>
+       </span>
+     <span style={{ margin: "0 10px"}}>
+     <Button type="button" onClick={() => handleSort("POINTS")}>Points</Button>
+       </span>
+
+   </li>
+ <li  className={styles.listContainer}>
+    {sortedList.map((item:any )=> (
       <Item 
       key={item.objectId}
       item={item}
       onRemoveItem={onRemoveItem}
        />
     ))} 
+    </li>
 </ul>
-))
+)
+})
+
 
 export default List

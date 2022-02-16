@@ -32,7 +32,8 @@ const Item = ({item, onRemoveItem}: ItemProps) => {
              <button type="button" 
                     onClick={() => {onRemoveItem(item)}}
                     className={`${styles.button} ${styles.buttonSmall}`}>
-               <Check width="18px" height="18px"/>
+               {/* <Check width="18px" height="18px"/> */}
+               Dismiss
              </button>
            </span>
        </li>
