@@ -295,7 +295,7 @@ const App = () => {
   return (
     <div>
       <div className={styles.container}>
-      <h1 className={styles.headlinePrimary}>My Hacker Stories</h1>
+      <h1 className={styles.headlinePrimary}>Search Engine</h1>
       <SearchForm
       searchTerm={searchTerm}
       onSearchInput={handleSearchInput}
