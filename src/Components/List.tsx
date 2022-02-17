@@ -1,7 +1,7 @@
 import React from 'react';
 import Item from './Item'
 import styles from "../App.module.css"
-import Button from './Button'
+import { ButtonBorderless } from './Button'
 import { sortBy } from 'lodash'
 
 type Story = {
@@ -48,16 +48,16 @@ const sortedList: any = sort.isReverse ? sortFunction(list).reverse() : sortFunc
     <strong>Sort By</strong>
   <li style={{display: 'flex', margin: "10px"}}>
      <span style={{ margin: "0 10px"}}>
-       <Button type="button" onClick={() => handleSort("TITLE")}>Title</Button>
+       <ButtonBorderless type="button" onClick={() => handleSort("TITLE")}>Title</ButtonBorderless>
        </span>
      <span style={{ margin: "0 10px"}}>
-     <Button type="button" onClick={() => handleSort("AUTHOR")}>Author</Button>
+     <ButtonBorderless type="button" onClick={() => handleSort("AUTHOR")}>Author</ButtonBorderless>
        </span>
      <span style={{ margin: "0 10px"}}>
-     <Button type="button" onClick={() => handleSort("COMMENTS")}>Comments</Button>
+     <ButtonBorderless type="button" onClick={() => handleSort("COMMENTS")}>Comments</ButtonBorderless>
        </span>
      <span style={{ margin: "0 10px"}}>
-     <Button type="button" onClick={() => handleSort("POINTS")}>Points</Button>
+     <ButtonBorderless type="button" onClick={() => handleSort("POINTS")}>Points</ButtonBorderless>
        </span>
 
    </li>

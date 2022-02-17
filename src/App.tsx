@@ -5,8 +5,14 @@ import List from './Components/List';
 import Slider from './Components/Slider'
 
 import SearchForm from './Components/SearchForm';
+import { result } from 'lodash';
+import { Button } from './Components/Button';
 
 const API_ENDPOINT = 'https://hn.algolia.com/api/v1/search?query=';
+const API_BASE = 'https://hn.algolia.com/api/v1';
+const API_SEARCH = '/search'
+const PARAM_SEARCH = 'query='
+const PARAM_PAGE = 'page='
 
 const initialStories = [
   {
@@ -50,7 +56,10 @@ type Story = {
   author: string;
   num_comments: number;
   points: number;
+ 
 }
+
+
 
 type Stories = Array<Story>
 
@@ -58,7 +67,9 @@ type Stories = Array<Story>
 type StoriesState = {
   data: Stories;
   isLoading: boolean;
-  isError: boolean
+  isError: boolean;
+  page: number
+  
 }
 
 type StoriesAction = 
@@ -74,7 +85,9 @@ interface StoriesFetchInitAction {
 
 interface StoriesFetchSuccessAction {
   type: 'STORIES_FETCH_SUCCESS';
-  payload: Stories
+  payload: { list: Stories, page: number}
+ 
+  
 }
 
 interface StoriesFetchFailureAction {
@@ -130,7 +143,9 @@ const storiesReducer = (
         ...state,
         isLoading: false,
         isError: false,
-        data: action.payload
+        data: action.payload.list,
+        page: action.payload.page
+        
       }
       case 'STORIES_FETCH_FAILURE' :
         return {
@@ -161,7 +176,7 @@ const storiesReducer = (
 
 
 const App = () => {
-  console.log("A: App");
+ 
   const [searchTerm, setSearchTerm] = useSemiPersistentState(
     'search',
     'React'
@@ -169,52 +184,94 @@ const App = () => {
 
   const [stories, dispatchStories] = React.useReducer(
     storiesReducer,
-    {data: [], isLoading: false, isError: false}
+    {data: [], isLoading: false, isError: false, page: 0}
   );
 
-  const [url, setUrl] = React.useState(
-    `${API_ENDPOINT}${searchTerm}`
+  const getUrl = (searchTerm: string, page: number) => `${API_BASE}${API_SEARCH}?${PARAM_SEARCH}${searchTerm}&${PARAM_PAGE}${page}`
+  const [urls, setUrls] = React.useState([
+    getUrl(searchTerm, 0)]
   );
   
   const handleSearchInput = (event: React.ChangeEvent<HTMLInputElement>) => {
     setSearchTerm(event.target.value)
   }
+
+  const handleSearch = (searchterm: string, page: number) => {
+    const url = getUrl(searchTerm, page);
+    setUrls(urls.concat(url))
+  }
   
   const handleSearchSubmit = (event: React.FormEvent<HTMLFormElement>) => {
-    setUrl(`${API_ENDPOINT}${searchTerm}`)
+    handleSearch(searchTerm, 0)
     event.preventDefault()
   }
+  // Last Searches
 
-    // Get Sum Comments
-// const sumComments = React.useMemo(() => getSumComments(stories), [stories])
+  
 
-  // Countdown
+  const extractSearchTerm = (url: any) => url.substring(url.lastIndexOf('?') + 1, url.lastIndexOf('&')).replace(PARAM_SEARCH, '')
+ 
+  
+  // const getLastSearches = (differentUrls: string[]) => 
+  // differentUrls.slice(-5).map((extractSearchTerm))
 
-  const [count, setCount] = React.useState(0);
+  const getLastSearches = (differentUrls: string[]) => 
+  differentUrls
+  .reduce((result: string[], url: string, index: number) => {
+    const searchTerm = extractSearchTerm(url);
 
-  const handleIncrease = () => {
-    setTimeout(() => setCount(count + 1));
-  };
+    if (index === 0) {
+      return result.concat(searchTerm);
+    }
+    const previousSerachTerm = result[result.length - 1];
+    if(searchTerm === previousSerachTerm){
+      return result
+    } else {
+      return result.concat(searchTerm)
+    }
+  }, []).slice(-6)
 
-  const handleDecrease = () => {
-    setTimeout(() => setCount(count - 1));
-  };
+
+  const handleLastSearch = (searchTerm: any) => {
+   setSearchTerm(searchTerm)
+   handleSearch(searchTerm, 0)
+  }
+
+  const handleMore = () => {
+    const lastUrl = urls[urls.length -1]
+    const searchTerm = extractSearchTerm(lastUrl);
+    handleSearch(searchTerm, stories.page + 1)
+  }
+
+  const handleLess = () => {
+    const lastUrl = urls[urls.length -1]
+    const searchTerm = extractSearchTerm(lastUrl);
+    handleSearch(searchTerm, stories.page - 1)
+  }
+
+  const lastSearches = getLastSearches(urls)
 
   const handleFetchStories = React.useCallback(async () => {
-
+    
+    
     dispatchStories({ type: 'STORIES_FETCH_INIT'})
       try {
-        const result = await axios.get(url)
-    
+        const lastUrl = urls[urls.length - 1]
+        const result = await axios.get(lastUrl)
+        
+        
        dispatchStories({
         type: 'STORIES_FETCH_SUCCESS',
-        payload: result.data.hits
+        payload: {
+          list: result.data.hits,
+          page: result.data.page
+        }
         })
       } catch {
         dispatchStories({ type: 'STORIES_FETCH_FAILURE'});
       }
 
-  }, [url]);
+  }, [urls]);
 
   React.useEffect(() => {
     handleFetchStories();
@@ -243,9 +300,12 @@ const App = () => {
       searchTerm={searchTerm}
       onSearchInput={handleSearchInput}
       onSearchSubmit={handleSearchSubmit}
+      lastSearches={lastSearches}
+      handleLastSearch={handleLastSearch}
        />
       {stories.isError && <p>Something went wrong ...</p>}
 
+    
       {stories.isLoading ? (
         <p>Loading ...</p>
       ) : (
@@ -254,18 +314,19 @@ const App = () => {
           onRemoveItem={handleRemoveStory}
         />
       )}
-       <Slider />
-  <div>
-    Count: {count}
-    <div>
-      <button type="button" onClick={handleIncrease}>
-        Increase
-      </button>
-      <button type="button" onClick={handleDecrease}>
-        Decrease
-      </button>
-    </div>
-  </div>
+      <div className={styles.pagesContainer}>
+      <Button
+      type='button'
+      onClick={handleLess}>Less
+      </Button>
+      {stories.page == 0 ? null : stories.page - 1}
+      <strong>{stories.page}</strong>
+      {stories.page + 1}
+      <Button
+      type='button'
+      onClick={handleMore}>More
+      </Button>
+      </div>
     </div>
     </div>
   );
